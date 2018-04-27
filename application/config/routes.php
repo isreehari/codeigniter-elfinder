@@ -53,4 +53,4 @@ $route['default_controller'] = 'welcome';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
-$route['elfinder/(:any)'] = 'elfinder/$1';
+$route['elfinderapi/(:any)'] = 'elfinderapi/$1';

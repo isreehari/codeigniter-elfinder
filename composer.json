@@ -13,9 +13,8 @@
 	"config": {
         "vendor-dir": "application/vendor"        
     },
-	"require": {
-		"php": ">=5.3.7",
-		"studio-42/elfinder": "^2.1"
+	"require": {		
+		"studio-42/elfinder": "2.1.x@dev"
 	},
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"
