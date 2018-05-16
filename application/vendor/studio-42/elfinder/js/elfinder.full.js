@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.37 (2.1-src Nightly: 81f6a9f) (2018-04-28)
+ * Version 2.1.38 (2.1-src Nightly: 40654dc) (2018-05-11)
  * http://elfinder.org
  * 
  * Copyright 2009-2018, Studio 42
@@ -4397,7 +4397,7 @@ var elFinder = function(elm, opts, bootCallback) {
 		self.messages = i18n.messages;
 		
 		// check jquery ui
-		if (!($.fn.selectable && $.fn.draggable && $.fn.droppable && $.fn.resizable)) {
+		if (!($.fn.selectable && $.fn.draggable && $.fn.droppable && $.fn.resizable && $.fn.slider)) {
 			return alert(self.i18n('errJqui'));
 		}
 		
@@ -9000,6 +9000,7 @@ elFinder.prototype = {
 	getSize : function(targets) {
 		var self = this,
 			reqs = [],
+			tgtlen = targets.length,
 			dfrd = $.Deferred().fail(function() {
 				$.each(reqs, function(i, req) {
 					if (req) {
@@ -9158,7 +9159,7 @@ elFinder.prototype = {
 				changed.length && self.change({changed: changed});
 				
 				if (dirCnt !== false){
-					cnts.push(self.i18n('folders') + ': ' + dirCnt);
+					cnts.push(self.i18n('folders') + ': ' + (dirCnt - (tgtlen > 1? 0 : 1)));
 				}
 				if (fileCnt !== false){
 					cnts.push(self.i18n('files') + ': ' + fileCnt);
@@ -9496,7 +9497,7 @@ if (!window.cancelAnimationFrame) {
  *
  * @type String
  **/
-elFinder.prototype.version = '2.1.37 (2.1-src Nightly: 81f6a9f)';
+elFinder.prototype.version = '2.1.38 (2.1-src Nightly: 40654dc)';
 
 
 
@@ -9926,14 +9927,15 @@ elFinder.prototype._options = {
 	cdns : {
 		// for editor etc.
 		ace        : '//cdnjs.cloudflare.com/ajax/libs/ace/1.3.3',
-		codemirror : '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.36.0',
+		codemirror : '//cdnjs.cloudflare.com/ajax/libs/codemirror/5.37.0',
 		ckeditor   : '//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.9.2',
-		ckeditor5  : '//cdn.ckeditor.com/ckeditor5/1.0.0-beta.3',
-		tinymce    : '//cdnjs.cloudflare.com/ajax/libs/tinymce/4.7.11',
+		ckeditor5  : '//cdn.ckeditor.com/ckeditor5/10.0.0',
+		tinymce    : '//cdnjs.cloudflare.com/ajax/libs/tinymce/4.7.12',
 		simplemde  : '//cdnjs.cloudflare.com/ajax/libs/simplemde/1.11.2',
 		// for quicklook etc.
 		hls        : '//cdnjs.cloudflare.com/ajax/libs/hls.js/0.9.1/hls.min.js',
-		dash       : '//cdnjs.cloudflare.com/ajax/libs/dashjs/2.6.7/dash.all.min.js',
+		dash       : '//cdnjs.cloudflare.com/ajax/libs/dashjs/2.6.8/dash.all.min.js',
+		flv        : '//cdnjs.cloudflare.com/ajax/libs/flv.js/1.4.2/flv.min.js',
 		prettify   : '//cdn.rawgit.com/google/code-prettify/fbd527e9f76914e36f730ec9849f2115473a65d8/loader/run_prettify.js',
 		psd        : '//cdnjs.cloudflare.com/ajax/libs/psd.js/3.2.0/psd.min.js',
 		rar        : '//cdn.rawgit.com/nao-pon/rar.js/6cef13ec66dd67992fc7f3ea22f132d770ebaf8b/rar.min.js',
@@ -9941,7 +9943,8 @@ elFinder.prototype._options = {
 		zlibGunzip : '//cdn.rawgit.com/imaya/zlib.js/0.3.1/bin/gunzip.min.js',
 		marked     : '//cdnjs.cloudflare.com/ajax/libs/marked/0.3.19/marked.min.js',
 		sparkmd5   : '//cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.0/spark-md5.min.js',
-		jssha      : '//cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha.js'
+		jssha      : '//cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha.js',
+		amr        : '//cdn.rawgit.com/yxl/opencore-amr-js/dcf3d2b5f384a1d9ded2a54e4c137a81747b222b/js/amrnb.js'
 	},
 	
 	/**
@@ -10344,6 +10347,14 @@ elFinder.prototype._options = {
 				enable : true, // is enable true or false
 				minlen : 1,    // minimum number of characters
 				wait   : 500   // wait milliseconds
+			},
+			// Additional search types
+			searchTypes : {
+				// "SearchMime" is implemented in default
+				SearchMime : {           // The key is search type that send to the connector
+					name : 'btnMime',    // Button text to be processed in i18n()
+					title : 'searchMime' // Button title to be processed in i18n()
+				}
 			}
 		},
 		// "info" command options.
@@ -10625,7 +10636,16 @@ elFinder.prototype._options = {
 				columnsCustomName : {},
 				// fixed list header colmun
 				fixedHeader : true
-			}
+			},
+
+			// icons view setting
+			iconsView : {
+				// default icon size (0-3 in default CSS (cwd.css - elfinder-cwd-size[number]))
+				size: 0,
+				// number of maximum size (3 in default CSS (cwd.css - elfinder-cwd-size[number]))
+				// uses in preference.js
+				sizeMax: 3
+			},
 
 			// /**
 			//  * Add CSS class name to cwd directories (optional)
@@ -12045,7 +12065,7 @@ $.fn.dialogelfinder = function(opts) {
  * English translation
  * @author Troex Nevelin <troex@fury.scancode.ru>
  * @author Naoki Sawada <hypweb+elfinder@gmail.com>
- * @version 2018-04-04
+ * @version 2018-05-07
  */
 // elfinder.en.js is integrated into elfinder.(full|min).js by jake build
 if (typeof elFinder === 'function' && elFinder.prototype.i18) {
@@ -12493,6 +12513,7 @@ if (typeof elFinder === 'function' && elFinder.prototype.i18) {
 			'workspace'       : 'Work Space', // from v2.1.38 added 4.4.2018
 			'dialog'          : 'Dialog', // from v2.1.38 added 4.4.2018
 			'all'             : 'All', // from v2.1.38 added 4.4.2018
+			'iconSize'        : 'Icon Size (Icons view)', // form v2.1.39 added 7.5.2018
 
 			/********************************** mimetypes **********************************/
 			'kindUnknown'     : 'Unknown',
@@ -12603,9 +12624,10 @@ $.fn.elfinderbutton = function(cmd) {
 			selected = 'elfinder-button-menu-item-selected',
 			menu,
 			text     = $('<span class="elfinder-button-text">'+cmd.title+'</span>'),
+			prvCname = 'elfinder-button-icon-' + (cmd.className? cmd.className : cmd.name),
 			button   = $(this).addClass('ui-state-default elfinder-button')
 				.attr('title', cmd.title)
-				.append('<span class="elfinder-button-icon elfinder-button-icon-' + (cmd.className? cmd.className : cmd.name) + '"/>', text)
+				.append('<span class="elfinder-button-icon ' + prvCname + '"/>', text)
 				.on('mouseenter mouseleave', function(e) { !button.hasClass(disabled) && button[e.type == 'mouseleave' ? 'removeClass' : 'addClass'](hover);})
 				.on('click', function(e) { 
 					if (!button.hasClass(disabled)) {
@@ -12690,6 +12712,7 @@ $.fn.elfinderbutton = function(cmd) {
 		}	
 			
 		cmd.change(function() {
+			var cName;
 			tm && cancelAnimationFrame(tm);
 			tm = requestAnimationFrame(function() {
 				if (cmd.disabled()) {
@@ -12699,6 +12722,11 @@ $.fn.elfinderbutton = function(cmd) {
 					button[cmd.active() ? 'addClass' : 'removeClass'](active);
 				}
 				if (cmd.syncTitleOnChange) {
+					cName = 'elfinder-button-icon-' + (cmd.className? cmd.className : cmd.name);
+					if (prvCname !== cName) {
+						button.children('.elfinder-button-icon').removeClass(prvCname).addClass(cName);
+						prvCname = cName;
+					}
 					text.html(cmd.title);
 					button.attr('title', cmd.title);
 				}
@@ -12876,8 +12904,16 @@ $.fn.elfindercontextmenu = function(fm) {
 								}
 								var tgt = $(e.target);
 								if (menu.first().length && !tgt.is('input:checkbox') && !tgt.hasClass('elfinder-cwd-select')) {
+									e.stopPropagation();
+									//e.preventDefault();
 									open(e.originalEvent.touches[0].pageX, e.originalEvent.touches[0].pageY);
-									return false;
+									cwd.data('longtap', true)
+									tgt.one('touchend', function() {
+										setTimeout(function() {
+											cwd.removeData('longtap');
+										}, 80);
+									});
+									return;
 								}
 								cwd.find('.elfinder-cwd-file').off(evTouchStart);
 							})
@@ -13467,7 +13503,14 @@ $.fn.elfindercwd = function(fm, options) {
 			 *
 			 * @type String
 			 **/
-			clHover     = fm.res(c, 'hover'), 
+			clHover     = fm.res(c, 'hover'),
+
+			/**
+			 * Active css class
+			 *
+			 * @type String
+			 **/
+			clActive     = fm.res(c, 'active'),
 
 			/**
 			 * Hover css class
@@ -14029,7 +14072,7 @@ $.fn.elfindercwd = function(fm, options) {
 			 * 
 			 * @return void
 			 */
-			wrapperRepaint = function(init) {
+			wrapperRepaint = function(init, recnt) {
 				var selectable = cwd.data('selectable'),
 					rec = (function() {
 						var wos = wrapper.offset(),
@@ -14119,6 +14162,14 @@ $.fn.elfindercwd = function(fm, options) {
 								}
 							}, arr).done(done);
 						}
+					}
+				} else if (init && bufferExt.renderd) {
+					// In initial request, cwd DOM not renderd so doing lazy check
+					recnt = recnt || 0;
+					if (recnt < 10) { // Prevent infinite loop
+						requestAnimationFrame(function() {
+							wrapperRepaint(init, ++recnt);
+						});
 					}
 				}
 			},
@@ -14260,7 +14311,7 @@ $.fn.elfindercwd = function(fm, options) {
 							}
 							wrapperRepaint(true);
 						}
-						
+
 						! scrolling && wrapper.trigger(scrollEvent);
 					};
 				
@@ -14822,8 +14873,8 @@ $.fn.elfindercwd = function(fm, options) {
 				}
 			},
 
-			bottomMarkerShow = function(place, cnt) {
-				var place = place || (list ? cwd.find('tbody') : cwd),
+			bottomMarkerShow = function(cur, cnt) {
+				var place = cur || (list ? cwd.find('tbody') : cwd),
 					boxSize = itemBoxSize[fm.viewType],
 					col = 1,
 					row;
@@ -14852,6 +14903,10 @@ $.fn.elfindercwd = function(fm, options) {
 			wrapperContextMenu = {
 				contextmenu : function(e) {
 					e.preventDefault();
+					if (cwd.data('longtap') !== void(0)) {
+						e.stopPropagation();
+						return;
+					}
 					fm.trigger('contextmenu', {
 						'type'    : 'cwd',
 						'targets' : [fm.cwd().hash],
@@ -14863,9 +14918,8 @@ $.fn.elfindercwd = function(fm, options) {
 					if (e.originalEvent.touches.length > 1) {
 						return;
 					}
-					cwd.data('longtap', null);
-					wrapper.data('touching', {x: e.originalEvent.touches[0].pageX, y: e.originalEvent.touches[0].pageY});
-					if (e.target === this || e.target === cwd.get(0)) {
+					if (cwd.data('longtap') !== false) {
+						wrapper.data('touching', {x: e.originalEvent.touches[0].pageX, y: e.originalEvent.touches[0].pageY});
 						cwd.data('tmlongtap', setTimeout(function(){
 							// long tap
 							cwd.data('longtap', true);
@@ -14877,6 +14931,7 @@ $.fn.elfindercwd = function(fm, options) {
 							});
 						}, 500));
 					}
+					cwd.data('longtap', null);
 				},
 				touchend : function(e) {
 					if (e.type === 'touchmove') {
@@ -14885,6 +14940,10 @@ $.fn.elfindercwd = function(fm, options) {
 								+ Math.abs(wrapper.data('touching').y - e.originalEvent.touches[0].pageY)) > 4) {
 							wrapper.data('touching', null);
 						}
+					} else {
+						setTimeout(function() {
+							cwd.removeData('longtap');
+						}, 80);
 					}
 					clearTimeout(cwd.data('tmlongtap'));
 				},
@@ -15183,11 +15242,17 @@ $.fn.elfindercwd = function(fm, options) {
 					sel = p.prevAll('.'+clSelected+':first').length +
 					      p.nextAll('.'+clSelected+':first').length;
 					cwd.data('longtap', null);
-					p.addClass(clHover)
-					 .data('tmlongtap', setTimeout(function(){
-						// long tap
-						cwd.data('longtap', true);
-						if (e.target.nodeName != 'TD' || fm.selected().length > 0) {
+					if (Object.keys(selectedFiles).length
+						||
+						(list && e.target.nodeName !== 'TD')
+						||
+						(!list && this !== e.target)
+					) {
+						cwd.data('longtap', false);
+						p.addClass(clHover);
+						p.data('tmlongtap', setTimeout(function(){
+							// long tap
+							cwd.data('longtap', true);
 							p.trigger(evtSelect);
 							trigger();
 							fm.trigger('contextmenu', {
@@ -15196,8 +15261,8 @@ $.fn.elfindercwd = function(fm, options) {
 								'x'       : e.originalEvent.touches[0].pageX,
 								'y'       : e.originalEvent.touches[0].pageY
 							});
-						}
-					}, 500));
+						}, 500));
+					}
 				})
 				.on('touchmove.'+fm.namespace+' touchend.'+fm.namespace, fileSelector, function(e) {
 					var tgt = $(e.target),
@@ -15214,10 +15279,15 @@ $.fn.elfindercwd = function(fm, options) {
 					if (e.type === 'touchmove') {
 						wrapper.data('touching', null);
 						p.removeClass(clHover);
-					} else if (wrapper.data('touching') && !cwd.data('longtap') && p.hasClass(clSelected)) {
-						e.preventDefault();
-						wrapper.data('touching', null);
-						fm.dblclick({file : fm.cwdId2Hash(this.id)});
+					} else {
+						if (wrapper.data('touching') && !cwd.data('longtap') && p.hasClass(clSelected)) {
+							e.preventDefault();
+							wrapper.data('touching', null);
+							fm.dblclick({file : fm.cwdId2Hash(this.id)});
+						}
+						setTimeout(function() {
+							cwd.removeData('longtap');
+						}, 80);
 					}
 				})
 				// attach draggable
@@ -15390,20 +15460,30 @@ $.fn.elfindercwd = function(fm, options) {
 				})
 				.on('mouseenter.'+fm.namespace+' mouseleave.'+fm.namespace, fileSelector, function(e) {
 					var enter = (e.type === 'mouseenter');
-					if (enter && scrolling) { return; }
+					if (enter && (scrolling || fm.UA.Mobile)) { return; }
 					fm.trigger('hover', {hash : fm.cwdId2Hash($(this).attr('id')), type : e.type});
 					$(this).toggleClass(clHover, (e.type == 'mouseenter'));
+				})
+				// for file contextmenu
+				.on('mouseenter.'+fm.namespace+' mouseleave.'+fm.namespace, '.elfinder-cwd-file-wrapper,.elfinder-cwd-filename', function(e) {
+					var enter = (e.type === 'mouseenter');
+					if (enter && scrolling) { return; }
+					$(this).closest(fileSelector).children('.elfinder-cwd-file-wrapper,.elfinder-cwd-filename').toggleClass(clActive, (e.type == 'mouseenter'));
 				})
 				.on('contextmenu.'+fm.namespace, function(e) {
 					var file = $(e.target).closest(fileSelector);
 					
+					if (file.get(0) === e.target && !selectedFiles[fm.cwdId2Hash(file.get(0).id)]) {
+						return;
+					}
+
 					// now filename editing
 					if (file.find('input:text,textarea').length) {
 						e.stopPropagation();
 						return;
 					}
 					
-					if (file.length && (e.target.nodeName != 'TD' || $.inArray(fm.cwdId2Hash(file.get(0).id), fm.selected()) > -1)) {
+					if (file.length && (e.target.nodeName != 'TD' || selectedFiles[fm.cwdId2Hash(file.get(0).id)])) {
 						e.stopPropagation();
 						e.preventDefault();
 						if (!file.hasClass(clDisabled) && !wrapper.data('touching')) {
@@ -15464,6 +15544,22 @@ $.fn.elfindercwd = function(fm, options) {
 							.find('td').css('width', '');
 						fixTableHeader({fitWidth: true});
 						fm.storage('cwdColWidth', colWidth = null);
+					}
+				})
+				.on('iconpref', function(e, data) {
+					if (!list) {
+						var size = data? (parseInt(data.size) || 0) : 0;
+						cwd.removeClass(function(i, cName) {
+							return (cName.match(/\belfinder-cwd-size\S+/g) || []).join(' ');
+						});
+						if (size > 0) {
+							cwd.addClass('elfinder-cwd-size' + size);
+						}
+						if (bufferExt.renderd) {
+							itemBoxSize.icons = {};
+							bufferExt.hpi = null;
+							bottomMarkerShow(cwd, bufferExt.renderd);
+						}
 					}
 				}),
 			wrapper = $('<div class="elfinder-cwd-wrapper"/>')
@@ -15635,7 +15731,7 @@ $.fn.elfindercwd = function(fm, options) {
 		fm
 			.one('init', function(){
 				var style = document.createElement('style'),
-				sheet, node, base, resizeTm, i = 0;
+				sheet, node, base, resizeTm, iconSize, i = 0;
 				if (document.head) {
 					document.head.appendChild(style);
 					sheet = style.sheet;
@@ -15645,6 +15741,9 @@ $.fn.elfindercwd = function(fm, options) {
 					sheet.insertRule('.elfinder-cwd-wrapper-empty.elfinder-search-result .elfinder-cwd:not(.elfinder-table-header-sticky):after{ content:"'+fm.i18n('emptySearch')+'" }', i++);
 					sheet.insertRule('.elfinder-cwd-wrapper-empty.elfinder-search-result.elfinder-incsearch-result .elfinder-cwd:not(.elfinder-table-header-sticky):after{ content:"'+fm.i18n('emptyIncSearch')+'" }', i++);
 					sheet.insertRule('.elfinder-cwd-wrapper-empty.elfinder-search-result.elfinder-letsearch-result .elfinder-cwd:not(.elfinder-table-header-sticky):after{ content:"'+fm.i18n('emptyLetSearch')+'" }', i++);
+				}
+				if (iconSize = fm.storage('iconsize') || 0) {
+					cwd.trigger('iconpref', {size: iconSize});
 				}
 				if (! mobile) {
 					fm.one('open', function() {
@@ -16672,36 +16771,42 @@ $.fn.elfinderdialog = function(opts, fm) {
 					}
 				})
 				.on('keydown', '.'+cltabstop, function(e) {
-					var $this = $(this);
+					var $this = $(this),
+						esc, move, moveTo;
 					if ($this.is(':focus')) {
-						e.stopPropagation();
-						if (e.keyCode == $.ui.keyCode.ENTER) {
+						esc = e.keyCode === $.ui.keyCode.ESCAPE;
+						if (e.keyCode === $.ui.keyCode.ENTER) {
 							e.preventDefault();
 							$this.trigger('click');
-						}  else if ((e.keyCode == $.ui.keyCode.TAB && e.shiftKey) || e.keyCode == $.ui.keyCode.LEFT || e.keyCode == $.ui.keyCode.UP) {
-							if ($this.is('input:text') && (!(e.ctrlKey || e.metaKey) && e.keyCode == $.ui.keyCode.LEFT)) {
-								return;
+						}  else if (((e.keyCode === $.ui.keyCode.TAB) && e.shiftKey) || e.keyCode === $.ui.keyCode.LEFT || e.keyCode == $.ui.keyCode.UP) {
+							move = 'prev';
+						}  else if (e.keyCode === $.ui.keyCode.TAB || e.keyCode == $.ui.keyCode.RIGHT || e.keyCode == $.ui.keyCode.DOWN) {
+							move = 'next';
+						}
+						if (move
+								&&
+							(
+								($this.is('textarea') && !(e.ctrlKey || e.metaKey))
+									||
+								($this.is('select,span.ui-slider-handle') && e.keyCode !== $.ui.keyCode.TAB)
+									||
+								($this.is('input:not(:checkbox,:radio)') && (!(e.ctrlKey || e.metaKey) && e.keyCode === $.ui.keyCode[move === 'prev'? 'LEFT':'RIGHT']))
+							)
+						) {
+							e.stopPropagation();
+							return;
+						}
+						if (!esc) {
+							e.stopPropagation();
+						} else if ($this.is('input:not(:checkbox,:radio),textarea')) {
+							if ($this.val() !== '') {
+								$this.val('');
+								e.stopPropagation();
 							}
-							if ($this.is('select') && e.keyCode != $.ui.keyCode.TAB) {
-								return;
-							}
-							if ($this.is('textarea') && !(e.ctrlKey || e.metaKey)) {
-								return;
-							}
+						}
+						if (move) {
 							e.preventDefault();
-							tabstopPrev(this).trigger('focus');
-						}  else if (e.keyCode == $.ui.keyCode.TAB || e.keyCode == $.ui.keyCode.RIGHT || e.keyCode == $.ui.keyCode.DOWN) {
-							if ($this.is('input:text') && (!(e.ctrlKey || e.metaKey) && e.keyCode == $.ui.keyCode.RIGHT)) {
-								return;
-							}
-							if ($this.is('select') && e.keyCode != $.ui.keyCode.TAB) {
-								return;
-							}
-							if ($this.is('textarea') && !(e.ctrlKey || e.metaKey)) {
-								return;
-							}
-							e.preventDefault();
-							tabstopNext(this).trigger('focus');
+							(move === 'prev'? tabstopPrev : tabstopNext)(this).trigger('focus');
 						}
 					}
 				})
@@ -18093,7 +18198,8 @@ $.fn.elfindersearchbutton = function(cmd) {
 		var result = false,
 			fm     = cmd.fm,
 			isopts = cmd.options.incsearch || { enable: false },
-			id     = function(name){return fm.namespace + name;},
+			sTypes = cmd.options.searchTypes,
+			id     = function(name){return fm.namespace + fm.escape(name);},
 			toolbar= fm.getUI('toolbar'),
 			btnCls = fm.res('class', 'searchbtn'),
 			button = $(this)
@@ -18106,7 +18212,8 @@ $.fn.elfindersearchbutton = function(cmd) {
 				input.data('inctm') && clearTimeout(input.data('inctm'));
 				var val = $.trim(input.val()),
 					from = !$('#' + id('SearchFromAll')).prop('checked'),
-					mime = $('#' + id('SearchMime')).prop('checked');
+					mime = $('#' + id('SearchMime')).prop('checked'),
+					type = '';
 				if (from) {
 					if ($('#' + id('SearchFromVol')).prop('checked')) {
 						from = fm.root(fm.cwd().hash);
@@ -18118,9 +18225,12 @@ $.fn.elfindersearchbutton = function(cmd) {
 					mime = val;
 					val = '.';
 				}
+				if (typeSet) {
+					type = typeSet.children('input:checked').val();
+				}
 				if (val) {
 					input.trigger('focus');
-					cmd.exec(val, from, mime).done(function() {
+					cmd.exec(val, from, mime, type).done(function() {
 						result = true;
 					}).fail(function() {
 						abort();
@@ -18185,7 +18295,7 @@ $.fn.elfindersearchbutton = function(cmd) {
 						abort();
 					}
 				}),
-			opts, cwdReady, inFocus;
+			opts, typeSet, cwdReady, inFocus;
 		
 		if (isopts.enable) {
 			isopts.minlen = isopts.minlen || 2;
@@ -18292,18 +18402,29 @@ $.fn.elfindersearchbutton = function(cmd) {
 								$('<input id="'+id('SearchFromVol')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromVol')+'">'+fm.i18n('btnVolume')+'</label>'),
 								$('<input id="'+id('SearchFromAll')+'" name="serchfrom" type="radio"/><label for="'+id('SearchFromAll')+'">'+fm.i18n('btnAll')+'</label>')
 							),
-						$('<div class="buttonset"/>')
+						$('<div class="buttonset elfinder-search-type"/>')
 							.append(
-								$('<input id="'+id('SearchName')+'" name="serchcol" type="radio" checked="checked"/><label for="'+id('SearchName')+'">'+fm.i18n('btnFileName')+'</label>'),
-								$('<input id="'+id('SearchMime')+'" name="serchcol" type="radio"/><label for="'+id('SearchMime')+'">'+fm.i18n('btnMime')+'</label>')
+								$('<input id="'+id('SearchName')+'" name="serchcol" type="radio" checked="checked" value="SearchName"/><label for="'+id('SearchName')+'">'+fm.i18n('btnFileName')+'</label>')
 							)
 					)
 					.hide()
 					.appendTo(fm.getUI());
 				if (opts) {
+					if (sTypes) {
+						typeSet = opts.find('.elfinder-search-type');
+						$.each(cmd.options.searchTypes, function(i, v) {
+							typeSet.append($('<input id="'+id(i)+'" name="serchcol" type="radio" value="'+fm.escape(i)+'"/><label for="'+id(i)+'">'+fm.i18n(v.name)+'</label>'));
+						});
+					}
 					opts.find('div.buttonset').buttonset();
 					$('#'+id('SearchFromAll')).next('label').attr('title', fm.i18n('searchTarget', fm.i18n('btnAll')));
-					$('#'+id('SearchMime')).next('label').attr('title', fm.i18n('searchMime'));
+					if (sTypes) {
+						$.each(sTypes, function(i, v) {
+							if (v.title) {
+								$('#'+id(i)).next('label').attr('title', fm.i18n(v.title));
+							}
+						});
+					}
 					opts.on('mousedown', 'div.buttonset', function(e){
 							e.stopPropagation();
 							opts.data('infocus', true);
@@ -23964,7 +24085,8 @@ elFinder.prototype.commands.mkdir = function() {
 		if (! select && ! this.options.intoNewFolderToolbtn) {
 			fm.getUI('cwd').trigger('unselectall');
 		}
-		this.move = (!onCwd && curOrg !== 'navbar' && fm.selected().length)? true : false;
+		//this.move = (!onCwd && curOrg !== 'navbar' && fm.selected().length)? true : false;
+		this.move = this.value === fm.i18n('cmdmkdirin');
 		return $.proxy(fm.res('mixin', 'make'), self)();
 	};
 	
@@ -23986,13 +24108,19 @@ elFinder.prototype.commands.mkdir = function() {
 		if (!self.options.intoNewFolderToolbtn && curOrg === '') {
 			curOrg = 'cwd';
 		}
-		if (sel.length && curOrg !== 'navbar'  && curOrg !== 'cwd' && fm.cwd().hash !== sel[0]) {
+		if (sel.length && curOrg !== 'navbar' && curOrg !== 'cwd' && fm.cwd().hash !== sel[0]) {
 			self.title = fm.i18n('cmdmkdirin');
 			self.className += ' elfinder-button-icon-mkdirin';
 		} else {
 			self.title = fm.i18n('cmdmkdir');
 		}
-		self.update(void(0), self.title);
+		if (e.type !== 'closecontextmenu') {
+			self.update(void(0), self.title);
+		} else {
+			requestAnimationFrame(function() {
+				self.update(void(0), self.title);
+			});
+		}
 	});
 	
 	this.getstate = function(select) {
@@ -25183,13 +25311,13 @@ elFinder.prototype.commands.preference = function() {
 			var cats = self.options.categories || {
 					'language' : ['language'],
 					'toolbar' : ['toolbarPref'],
-					'workspace' : ['columnPref', 'selectAction', 'useStoredEditor'],
+					'workspace' : ['iconSize','columnPref', 'selectAction', 'useStoredEditor'],
 					'dialog' : ['autoFocusDialog'],
 					'selectionInfo' : ['infoItems', 'hashChecker'],
 					'reset' : ['clearBrowserData'],
 					'all' : true
 				},
-				forms = self.options.prefs || ['language', 'toolbarPref', 'columnPref', 'selectAction', 'useStoredEditor', 'infoItems', 'hashChecker', 'autoFocusDialog', 'clearBrowserData'];
+				forms = self.options.prefs || ['language', 'toolbarPref', 'iconSize', 'columnPref', 'selectAction', 'useStoredEditor', 'infoItems', 'hashChecker', 'autoFocusDialog', 'clearBrowserData'];
 			
 			forms = fm.arrayFlip(forms, true);
 			
@@ -25275,6 +25403,24 @@ elFinder.prototype.commands.preference = function() {
 				});
 			})());
 			
+			forms.iconSize && (forms.iconSize = (function() {
+				var max = fm.options.uiOptions.cwd.iconsView.sizeMax || 3,
+					size = fm.storage('iconsize') || 0;
+				return $('<div class="touch-punch"/>').slider({
+					classes: {
+						'ui-slider-handle': 'elfinder-tabstop',
+					},
+					value: size,
+					max: max,
+					slide: function(e, ui) {
+						fm.getUI('cwd').trigger('iconpref', {size: ui.value});
+					},
+					change: function(e, ui) {
+						fm.storage('iconsize', ui.value);
+					}
+				});
+			})());
+
 			forms.columnPref && (forms.columnPref = (function() {
 				var cols = fm.options.uiOptions.cwd.listView.columns,
 					tags = [],
@@ -25332,7 +25478,7 @@ elFinder.prototype.commands.preference = function() {
 			forms.infoItems && (forms.infoItems = (function() {
 				var items = fm.getCommand('info').items,
 					tags = [],
-					hides = fm.storage('infohides') || {};
+					hides = fm.storage('infohides') || fm.arrayFlip(fm.options.commandsOptions.info.hideItems, true);
 				$.each(items, function() {
 					var key = this,
 						name = fm.i18n(key);
@@ -25467,7 +25613,8 @@ elFinder.prototype.commands.preference = function() {
 			dialog.closest('.ui-dialog')
 			.css({
 				overflow: 'hidden'
-			});
+			})
+			.addClass('elfinder-bg-translucent');
 			
 			openTab = 'all';
 		},
@@ -25624,15 +25771,15 @@ elFinder.prototype.commands.preference = function() {
 			};
 		},
 		
+		mediaNode = {},
 		support = function(codec, name) {
-			var media = document.createElement(name || codec.substr(0, codec.indexOf('/'))),
+			var node  = name || codec.substr(0, codec.indexOf('/')),
+				media = mediaNode[node]? mediaNode[node] : (mediaNode[node] = document.createElement(node)),
 				value = false;
 			
 			try {
 				value = media.canPlayType && media.canPlayType(codec);
-			} catch (e) {
-				
-			}
+			} catch(e) {}
 			
 			return (value && value !== '' && value != 'no')? true : false;
 		},
@@ -26036,6 +26183,9 @@ elFinder.prototype.commands.preference = function() {
 				open(docked);
 				self.preview.trigger('changesize');
 				fm.storage('previewDocked', '1');
+				if (fm.getUI('navdock').width() === 0) {
+					win.trigger('navdockout');
+				}
 			}
 		})
 		.on('close', function(e, dfd) {
@@ -26158,20 +26308,26 @@ elFinder.prototype.commands.preference = function() {
 	
 	this.support = {
 		audio : {
-			ogg : support('audio/ogg; codecs="vorbis"') || support('audio/ogg; codecs="flac"'),
+			ogg : support('audio/ogg;'),
+			webm: support('audio/webm;'),
 			mp3 : support('audio/mpeg;'),
-			wav : support('audio/wav; codecs="1"'),
+			wav : support('audio/wav;'),
 			m4a : support('audio/mp4;') || support('audio/x-m4a;') || support('audio/aac;'),
-			flac: support('audio/flac;')
+			flac: support('audio/flac;'),
+			amr : support('audio/amr;')
 		},
 		video : {
-			ogg  : support('video/ogg; codecs="theora"'),
-			webm : support('video/webm; codecs="vp8, vorbis"') || support('video/webm; codecs="vp9"'),
-			mp4  : support('video/mp4; codecs="avc1.42E01E"') || support('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'),
+			ogg  : support('video/ogg;'),
+			webm : support('video/webm;'),
+			mp4  : support('video/mp4;'),
+			mkv  : support('video/x-matroska;') || support('video/webm;'),
+			'3gp': support('video/3gpp;'),
 			m3u8 : support('application/x-mpegURL', 'video') || support('application/vnd.apple.mpegURL', 'video'),
 			mpd  : support('application/dash+xml', 'video')
 		}
 	};
+	// for GC
+	mediaNode = {};
 	
 	/**
 	 * Return true if quickLoock window is hiddenReturn true if quickLoock window is visible and not animated
@@ -26883,7 +27039,8 @@ elFinder.prototype.commands.quicklook.plugins = [
 	 * @param elFinder.commands.quicklook
 	 **/
 	function(ql) {
-				var preview  = ql.preview,
+				var fm       = ql.fm,
+			preview  = ql.preview,
 			mimes    = {
 				'audio/mpeg'    : 'mp3',
 				'audio/mpeg3'   : 'mp3',
@@ -26897,48 +27054,134 @@ elFinder.prototype.commands.quicklook.plugins = [
 				'audio/mp4'     : 'm4a',
 				'audio/x-mp4'   : 'm4a',
 				'audio/ogg'     : 'ogg',
+				'audio/webm'    : 'webm',
 				'audio/flac'    : 'flac',
-				'audio/x-flac'  : 'flac'
+				'audio/x-flac'  : 'flac',
+				'audio/amr'     : 'amr'
 			},
-			node,
+			node, curHash,
 			win  = ql.window,
-			navi = ql.navbar;
-
-		preview.on(ql.evUpdate, function(e) {
-			var file = e.file,
-				type = mimes[file.mime],
-				autoplay = ql.autoPlay(),
-				setNavi = function() {
-					navi.css('bottom', win.hasClass('elfinder-quicklook-fullscreen')? '50px' : '');
-				};
-
-			if (ql.dispInlineRegex.test(file.mime) && ql.support.audio[type]) {
-				e.stopImmediatePropagation();
-				
-				node = $('<audio class="elfinder-quicklook-preview-audio" controls preload="auto" autobuffer><source src="'+ql.fm.openUrl(file.hash)+'" /></audio>')
+			navi = ql.navbar,
+			AMR, autoplay,
+			setNavi = function() {
+				navi.css('bottom', win.hasClass('elfinder-quicklook-fullscreen')? '50px' : '');
+			},
+			getNode = function(src) {
+				return $('<audio class="elfinder-quicklook-preview-audio ui-front" controls preload="auto" autobuffer><source src="'+src+'" /></audio>')
 					.on('change', function(e) {
 						// Firefox fire change event on seek or volume change
 						e.stopPropagation();
 					})
+					.on('error', reset)
 					.appendTo(preview);
-				autoplay && node[0].play();
-				
-				win.on('viewchange.audio', setNavi);
-				setNavi();
+			},
+			amrToWavUrl = function(hash) {
+				var dfd = $.Deferred(),
+					loader = $.Deferred().done(function() {
+						fm.getContents(hash).done(function(data) {
+							try {
+								var buffer = AMR.toWAV(new Uint8Array(data));
+								if (buffer) {
+									dfd.resolve(URL.createObjectURL(new Blob([buffer], { type: 'audio/x-wav' })));
+								} else {
+									dfd.reject();
+								}
+							} catch(e) {
+								dfd.reject();
+							}
+						}).fail(function() {
+							dfd.reject();
+						});
+					}).fail(function() {
+						AMR = false;
+						dfd.reject();
+					}),
+					_AMR;
+				if (window.TextEncoder && window.URL && URL.createObjectURL && typeof AMR === 'undefined') {
+					// previous window.AMR
+					_AMR = window.AMR;
+					delete window.AMR;
+					fm.loadScript(
+						[ fm.options.cdns.amr ],
+						function() { 
+							AMR = window.AMR? window.AMR : false;
+							// restore previous window.AMR
+							window.AMR = _AMR;
+							loader[AMR? 'resolve':'reject']();
+						},
+						{
+							error: function() {
+								loader.reject();
+							}
+						}
+					);
+				} else {
+					loader[AMR? 'resolve':'reject']();
+				}
+				return dfd;
+			},
+			reset = function() {
+				if (node && node.parent().length) {
+					var elm = node[0],
+						url = node.children('source').attr('src');
+					win.off('viewchange.audio');
+					try {
+						elm.pause();
+						node.empty();
+						if (url.match(/^blob:/)) {
+							URL.revokeObjectURL(url);
+						}
+						elm.src = '';
+						elm.load();
+					} catch(e) {}
+					node.remove();
+					node = null;
+				}
+			};
+
+		preview.on(ql.evUpdate, function(e) {
+			var file = e.file,
+				type = mimes[file.mime],
+				html5, srcUrl;
+
+			if (mimes[file.mime] && ql.dispInlineRegex.test(file.mime) && ((html5 = ql.support.audio[type]) || (type === 'amr'))) {
+				autoplay = ql.autoPlay();
+				curHash = file.hash;
+				srcUrl = html5? fm.openUrl(curHash) : '';
+				if (!html5) {
+					if (fm.options.cdns.amr && type === 'amr' && AMR !== false) {
+						e.stopImmediatePropagation();
+						node = getNode(srcUrl);
+						amrToWavUrl(file.hash).done(function(url) {
+							if (curHash === file.hash) {
+								var elm = node[0];
+								try {
+									node.children('source').attr('src', url);
+									elm.pause();
+									elm.load();
+									autoplay && elm.play();
+									win.on('viewchange.audio', setNavi);
+									setNavi();
+								} catch(e) {
+									URL.revokeObjectURL(url);
+									node.remove();
+								}
+							} else {
+								URL.revokeObjectURL(url);
+							}
+						}).fail(function() {
+							node.remove();
+						});
+					}
+				} else {
+					e.stopImmediatePropagation();
+					node = getNode(srcUrl);
+					autoplay && node[0].play();
+					win.on('viewchange.audio', setNavi);
+					setNavi();
+				}
 			}
-		}).on('change', function() {
-			if (node && node.parent().length) {
-				var elm = node[0];
-				win.off('viewchange.audio');
-				try {
-					elm.pause();
-					elm.src = '';
-					elm.load();
-				} catch(e) {}
-				node.remove();
-				node= null;
-			}
-		});
+		}).on('change', reset);
 	},
 	
 	/**
@@ -26956,118 +27199,202 @@ elFinder.prototype.commands.quicklook.plugins = [
 				'video/ogg'       : 'ogg',
 				'application/ogg' : 'ogg',
 				'video/webm'      : 'webm',
+				'video/x-matroska': 'mkv',
+				'video/3gpp'      : '3gp',
 				'application/vnd.apple.mpegurl' : 'm3u8',
 				'application/x-mpegurl' : 'm3u8',
-				'application/dash+xml'  : 'mpd'
+				'application/dash+xml'  : 'mpd',
+				'video/x-flv'     : 'flv'
 			},
 			node,
 			win  = ql.window,
 			navi = ql.navbar,
-			cHls, cDash;
+			cHls, cDash, cFlv, autoplay,
+			setNavi = function() {
+				if (fm.UA.iOS) {
+					if (win.hasClass('elfinder-quicklook-fullscreen')) {
+						preview.css('height', '-webkit-calc(100% - 50px)');
+						navi._show();
+					} else {
+						preview.css('height', '');
+					}
+				} else {
+					navi.css('bottom', win.hasClass('elfinder-quicklook-fullscreen')? '50px' : '');
+				}
+			},
+			render = function(file, opts) {
+				var errTm = function(e) {
+						if (err > 1) {
+							tm && clearTimeout(tm);
+							tm = setTimeout(function() {
+								!canPlay && reset(true);
+							}, 800);
+						}
+					},
+					err = 0, 
+					canPlay, tm;
+				opts = opts || {};
+				ql.hideinfo();
+				node = $('<video class="elfinder-quicklook-preview-video" controls preload="auto" autobuffer playsinline>'
+						+'</video>')
+					.on('change', function(e) {
+						// Firefox fire change event on seek or volume change
+						e.stopPropagation();
+					})
+					.on('timeupdate progress', errTm)
+					.on('canplay', function() {
+						canPlay = true;
+					});
+				// can not handling error event with jQuery `on` event handler
+				node[0].addEventListener('error', function(e) {
+					if (opts.src && fm.convAbsUrl(opts.src) === fm.convAbsUrl(e.target.src)) {
+						++err;
+						errTm();
+					}
+				}, true);
+
+				if (opts.src) {
+					node.append('<source src="'+opts.src+'" type="'+file.mime+'"/><source src="'+opts.src+'"/>');
+				}
+				
+				node.appendTo(preview);
+
+				win.on('viewchange.video', setNavi);
+				setNavi();
+			},
+			loadHls = function(file) {
+				var hls;
+				render(file);
+				hls = new cHls();
+				hls.loadSource(fm.openUrl(file.hash));
+				hls.attachMedia(node[0]);
+				if (autoplay) {
+					hls.on(cHls.Events.MANIFEST_PARSED,function() {
+						node[0].play();
+					});
+				}
+			},
+			loadDash = function(file) {
+				var player;
+				render(file);
+				player = window.dashjs.MediaPlayer().create();
+				player.initialize(node[0], fm.openUrl(file.hash), autoplay);
+			},
+			loadFlv = function(file) {
+				if (!cFlv.isSupported()) {
+					cFlv = false;
+					return;
+				}
+				var player = cFlv.createPlayer({
+					type: 'flv',
+					url: fm.openUrl(file.hash)
+				});
+				render(file);
+				player.on(cFlv.Events.ERROR, function() {
+					player.destroy();
+					reset(true);
+				});
+				player.attachMediaElement(node[0]);
+				player.load();
+				autoplay && player.play();
+			},
+			reset = function(showInfo) {
+				if (node && node.parent().length) {
+					var elm = node[0];
+					win.off('viewchange.video');
+					try {
+						elm.pause();
+						node.empty();
+						elm.src = '';
+						elm.load();
+					} catch(e) {}
+					node.remove();
+					node= null;
+				}
+				showInfo && ql.info.show();
+			};
 
 		preview.on(ql.evUpdate, function(e) {
 			var file = e.file,
-				autoplay = ql.autoPlay(),
-				type = mimes[file.mime.toLowerCase()],
-				setNavi = function() {
-					if (fm.UA.iOS) {
-						if (win.hasClass('elfinder-quicklook-fullscreen')) {
-							preview.css('height', '-webkit-calc(100% - 50px)');
-							navi._show();
-						} else {
-							preview.css('height', '');
-						}
-					} else {
-						navi.css('bottom', win.hasClass('elfinder-quicklook-fullscreen')? '50px' : '');
-					}
-				},
-				render = function(opts) {
-					opts = opts || {};
-					ql.hideinfo();
-					node = $('<video class="elfinder-quicklook-preview-video" controls preload="auto" autobuffer playsinline>'
-							+'</video>')
-						.on('change', function(e) {
-							// Firefox fire change event on seek or volume change
-							e.stopPropagation();
-						});
-					if (opts.src) {
-						node.append('<source src="'+opts.src+'" type="'+file.mime+'"/><source src="'+opts.src+'"/>');
-					}
-					
-					node.appendTo(preview);
-
-					win.on('viewchange.video', setNavi);
-					setNavi();
-				},
-				loadHls = function() {
-					var hls;
-					render();
-					hls = new cHls();
-					hls.loadSource(fm.openUrl(file.hash));
-					hls.attachMedia(node[0]);
-					if (autoplay) {
-						hls.on(cHls.Events.MANIFEST_PARSED,function() {
-							node[0].play();
-						});
-					}
-				},
-				loadDash = function() {
-					var player;
-					render();
-					player = cDash.MediaPlayer().create();
-					player.initialize(node[0], fm.openUrl(file.hash), autoplay);
-				};
+				mime = file.mime.toLowerCase(),
+				type = mimes[mime],
+				stock;
 			
-			if (ql.dispInlineRegex.test(file.mime) && (((type === 'm3u8' || type === 'mpd') && !fm.UA.ltIE10) || ql.support.video[type])) {
+			if (mimes[mime] && ql.dispInlineRegex.test(file.mime) && (((type === 'm3u8' || type === 'mpd' || type === 'flv') && !fm.UA.ltIE10) || ql.support.video[type])) {
+				autoplay = ql.autoPlay();
 				if (ql.support.video[type] && (type !== 'm3u8' || fm.UA.Safari)) {
 					e.stopImmediatePropagation();
-					render({ src: fm.openUrl(file.hash) });
+					render(file, { src: fm.openUrl(file.hash) });
 					autoplay && node[0].play();
 				} else {
-					if (fm.options.cdns.hls && type === 'm3u8') {
+					if (cHls !== false && fm.options.cdns.hls && type === 'm3u8') {
 						e.stopImmediatePropagation();
 						if (cHls) {
-							loadHls();
+							loadHls(file);
 						} else {
+							stock = window.Hls;
+							delete window.Hls;
 							fm.loadScript(
 								[ fm.options.cdns.hls ],
 								function(res) { 
-									cHls = res || window.Hls;
-									loadHls();
+									cHls = res || window.Hls || false;
+									window.Hls = stock;
+									cHls && loadHls(file);
 								},
-								{tryRequire: true}
+								{
+									tryRequire: true,
+									error : function() {
+										cHls = false;
+									}
+								}
 							);
 						}
-					} else if (fm.options.cdns.dash && type === 'mpd') {
+					} else if (cDash !== false && fm.options.cdns.dash && type === 'mpd') {
 						e.stopImmediatePropagation();
 						if (cDash) {
-							loadDash();
+							loadDash(file);
 						} else {
 							fm.loadScript(
 								[ fm.options.cdns.dash ],
-								function() { 
-									cDash = window.dashjs;
-									loadDash();
+								function() {
+									// dashjs require window.dashjs in global scope
+									cDash = window.dashjs? true : false;
+									cDash && loadDash(file);
 								},
-								{tryRequire: true}
+								{
+									tryRequire: true,
+									error : function() {
+										cDash = false;
+									}
+								}
+							);
+						}
+					} else if (cFlv !== false && fm.options.cdns.flv && type === 'flv') {
+						e.stopImmediatePropagation();
+						if (cFlv) {
+							loadFlv(file);
+						} else {
+							stock = window.flvjs;
+							delete window.flvjs;
+							fm.loadScript(
+								[ fm.options.cdns.flv ],
+								function(res) { 
+									cFlv = res || window.flvjs || false;
+									window.flvjs = stock;
+									cFlv && loadFlv(file);
+								},
+								{
+									tryRequire: true,
+									error : function() {
+										cFlv = false;
+									}
+								}
 							);
 						}
 					}
 				}
 			}
-		}).on('change', function() {
-			if (node && node.parent().length) {
-				var elm = node[0];
-				win.off('viewchange.video');
-				try {
-					elm.pause();
-					elm.src = '';
-					elm.load();
-				} catch(e) {}
-				node.remove();
-				node= null;
-			}
-		});
+		}).on('change', reset);
 	},
 	
 	/**
@@ -30614,11 +30941,18 @@ elFinder.prototype.commands.search = function() {
 	 * @param  String  search string
 	 * @return $.Deferred
 	 **/
-	this.exec = function(q, target, mime) {
+	this.exec = function(q, target, mime, type) {
 		var fm = this.fm,
 			reqDef = [],
+			sType = type || '',
 			onlyMimes = fm.options.onlyMimes,
-			phash, targetVolids = [];
+			phash, targetVolids = [],
+			setType = function(data) {
+				if (sType && sType !== 'SearchName' && sType !== 'SearchMime') {
+					data.type = sType;
+				}
+				return data;
+			};
 		
 		if (typeof q == 'string' && q) {
 			if (typeof target == 'object') {
@@ -30640,13 +30974,13 @@ elFinder.prototype.commands.search = function() {
 				mime = [].concat(onlyMimes);
 			}
 
-			fm.trigger('searchstart', {query : q, target : target, mimes : mime});
+			fm.trigger('searchstart', setType({query : q, target : target, mimes : mime}));
 			
 			if (! onlyMimes.length || mime.length) {
 				if (target === '' && fm.api >= 2.1) {
 					$.each(fm.roots, function(id, hash) {
 						reqDef.push(fm.request({
-							data   : {cmd : 'search', q : q, target : hash, mimes : mime},
+							data   : setType({cmd : 'search', q : q, target : hash, mimes : mime}),
 							notify : {type : 'search', cnt : 1, hideCnt : (reqDef.length? false : true)},
 							cancel : true,
 							preventDone : true
@@ -30654,7 +30988,7 @@ elFinder.prototype.commands.search = function() {
 					});
 				} else {
 					reqDef.push(fm.request({
-						data   : {cmd : 'search', q : q, target : target, mimes : mime},
+						data   : setType({cmd : 'search', q : q, target : target, mimes : mime}),
 						notify : {type : 'search', cnt : 1, hideCnt : true},
 						cancel : true,
 						preventDone : true
@@ -30668,7 +31002,7 @@ elFinder.prototype.commands.search = function() {
 										var f = fm.file(this);
 										f && f.volumeid && targetVolids.push(f.volumeid);
 										reqDef.push(fm.request({
-											data   : {cmd : 'search', q : q, target : this, mimes : mime},
+											data   : setType({cmd : 'search', q : q, target : this, mimes : mime}),
 											notify : {type : 'search', cnt : 1, hideCnt : false},
 											cancel : true,
 											preventDone : true

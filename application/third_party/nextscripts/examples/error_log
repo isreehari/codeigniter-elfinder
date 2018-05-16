@@ -1,0 +1,8 @@
+[07-Dec-2016 22:32:12 UTC] PHP Warning:  require_once(nxs-snap-class.php): failed to open stream: No such file or directory in /home/cpnswp/public_html/snap-api/examples/class-usage.php on line 14
+[07-Dec-2016 22:32:12 UTC] PHP Fatal error:  require_once(): Failed opening required 'nxs-snap-class.php' (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/cpnswp/public_html/snap-api/examples/class-usage.php on line 14
+[07-Dec-2016 22:32:25 UTC] PHP Fatal error:  Class 'nxs_snapClassNT' not found in /home/cpnswp/public_html/snap-api/inc-cl/5p.php on line 5
+[07-Dec-2016 22:40:01 UTC] PHP Warning:  require_once(inc/nxs-networks-class.php): failed to open stream: No such file or directory in /home/cpnswp/public_html/snap-api/examples/class-usage-new-post-form.php on line 3
+[07-Dec-2016 22:40:01 UTC] PHP Fatal error:  require_once(): Failed opening required 'inc/nxs-networks-class.php' (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/cpnswp/public_html/snap-api/examples/class-usage-new-post-form.php on line 3
+[07-Dec-2016 22:41:10 UTC] PHP Warning:  Invalid argument supplied for foreach() in /home/cpnswp/public_html/snap-api/examples/class-usage-new-post-form.php on line 113
+[08-Dec-2016 21:24:58 UTC] PHP Warning:  require_once(nxs-api/nxs-api.php): failed to open stream: No such file or directory in /home/cpnswp/public_html/snap-api/examples/direct-nxsapi-usage-Google-Plus.php on line 4
+[08-Dec-2016 21:24:58 UTC] PHP Fatal error:  require_once(): Failed opening required 'nxs-api/nxs-api.php' (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/cpnswp/public_html/snap-api/examples/direct-nxsapi-usage-Google-Plus.php on line 4

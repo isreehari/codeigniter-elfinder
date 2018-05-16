@@ -9,6 +9,12 @@ $config = array(
                         'uploadDeny'    => array('all'),                  // All Mimetypes not allowed to upload
                         'uploadAllow'   => array('image', 'text/plain', 'application/pdf'),// Mimetype `image` and `text/plain` allowed to upload
                         'uploadOrder'   => array('deny', 'allow'),        // allowed Mimetype `image` and `text/plain` only                       
+                        'tmbURL'        => 'self',
+                        //'imgLib'      => 'imagick',
+                        //'tmbSize'       => 200,
+                        'utf8fix'       => true,
+                        'tmbCrop'       => false,
+                        'tmbBgColor'    => 'transparent'
                         // more elFinder options here
                     ) 
                 ),                

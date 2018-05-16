@@ -12,9 +12,27 @@
 	},
 	"config": {
         "vendor-dir": "application/vendor"        
-    },
+	},
+	
+	"repositories": [
+		{
+		  "type": "package",
+		  "package": {
+										"name": "splessons/nextscripts",
+										"version": "0.1.0",
+										"type": "package",
+										"source": {
+																"url": "https://gitlab+deploy-token-612:mbZ9HcTzJoqaE_ZbJqTG@gitlab.com/itoolsinfo/splessons/nextscripts.git",
+																"type": "git",
+																"reference": "master"
+															}
+		  }
+		}
+	  ],
+
 	"require": {		
-		"studio-42/elfinder": "2.1.x@dev"
+		"studio-42/elfinder": "2.1.x@dev",
+		"splessons/nextscripts": "*"
 	},
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"

@@ -1289,18 +1289,30 @@
         "homepage": "https://github.com/sebastianbergmann/version"
     },
     {
+        "name": "splessons/nextscripts",
+        "version": "0.1.0",
+        "version_normalized": "0.1.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://gitlab+deploy-token-612:mbZ9HcTzJoqaE_ZbJqTG@gitlab.com/itoolsinfo/splessons/nextscripts.git",
+            "reference": "master"
+        },
+        "type": "package",
+        "installation-source": "source"
+    },
+    {
         "name": "studio-42/elfinder",
         "version": "2.1.x-dev",
         "version_normalized": "2.1.9999999.9999999-dev",
         "source": {
             "type": "git",
             "url": "https://github.com/Studio-42/elFinder.git",
-            "reference": "6e3756a713edce77159d47c89ab721cf57d36eba"
+            "reference": "e54cc9695054e6d3b89aa0c3b6367fd68e0e0adf"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/Studio-42/elFinder/zipball/6e3756a713edce77159d47c89ab721cf57d36eba",
-            "reference": "6e3756a713edce77159d47c89ab721cf57d36eba",
+            "url": "https://api.github.com/repos/Studio-42/elFinder/zipball/e54cc9695054e6d3b89aa0c3b6367fd68e0e0adf",
+            "reference": "e54cc9695054e6d3b89aa0c3b6367fd68e0e0adf",
             "shasum": ""
         },
         "require": {
@@ -1312,7 +1324,7 @@
             "kunalvarma05/dropbox-php-sdk": "VolumeDriver `Dropbox`2 require `kunalvarma05/dropbox-php-sdk.",
             "nao-pon/flysystem-google-drive": "require in GoogleDrive network volume mounting with Flysystem."
         },
-        "time": "2018-04-27T15:19:31+00:00",
+        "time": "2018-05-11T09:40:16+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -1350,17 +1362,17 @@
     },
     {
         "name": "symfony/yaml",
-        "version": "v3.4.8",
-        "version_normalized": "3.4.8.0",
+        "version": "v3.4.9",
+        "version_normalized": "3.4.9.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/yaml.git",
-            "reference": "a42f9da85c7c38d59f5e53f076fe81a091f894d0"
+            "reference": "033cfa61ef06ee0847e056e530201842b6e926c3"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/yaml/zipball/a42f9da85c7c38d59f5e53f076fe81a091f894d0",
-            "reference": "a42f9da85c7c38d59f5e53f076fe81a091f894d0",
+            "url": "https://api.github.com/repos/symfony/yaml/zipball/033cfa61ef06ee0847e056e530201842b6e926c3",
+            "reference": "033cfa61ef06ee0847e056e530201842b6e926c3",
             "shasum": ""
         },
         "require": {
@@ -1375,7 +1387,7 @@
         "suggest": {
             "symfony/console": "For validating YAML files using the lint command"
         },
-        "time": "2018-04-03T05:14:20+00:00",
+        "time": "2018-04-08T08:21:29+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
