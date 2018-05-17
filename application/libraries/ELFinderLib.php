@@ -40,46 +40,49 @@ class ELFinderLib
     }   
 
 
-    public function preUpload(&$path, &$name, $src, $elfinder, $volume)
-    {
-            $ext = '';
-            if ($pos = strrpos($name, '.')) {
-                $ext = substr($name, $pos);
-            }
+    public function preUpload(&$path, &$name, $src, $elfinder, $volume){            
 
-            // log_message('error', print_r($path,true)); // l1_XA
-            // log_message('error', print_r($name,true)); //7a47bf5f-2115-4750-96eb-6dc2d2193bac.jpg
-            // log_message('error', print_r($src,true)); //C:\wamp64\tmp\php104C.tmp
-            // log_message('error', print_r($elfinder,true)); //Object
-            //log_message('error', print_r($volume->ARGS->,true));
-           
-            // cmd: mkdir
-            // name: hello
-            // target: l1_XA
-            // reqid: 1636a3459c56a
+            $currentYear = date("Y");
+            $currentMonth = date("m");
             
             $realpath = $elfinder->realpath($path);
-            $realpath =  $realpath. '/'.'hari';
+            $realpath =  $realpath. '/' .$currentYear;
 
             if(!file_exists($realpath) || !is_dir($realpath)){
-                $args = array('target' => $path, 'name' => 'hari', 'reqid' => '' );
+                $args = array('target' => $path, 'name' => $currentYear, 'reqid' => '' );
                 $result = $elfinder->exec('mkdir', $args);
                 if($result && $result["added"]){
-                    $path = $result['added'][0]['hash'];
+                    $path = $result['added'][0]['hash'];         
 
+                    $realpath = $realpath . '/' .  $currentMonth;
+                    $args = array('target' => $path, 'name' => $currentMonth, 'reqid' => '' );
+                    $result = $elfinder->exec('mkdir', $args);
+                    if($result && $result["added"]){
+                        $path = $result['added'][0]['hash'];    
+                    }else{
+                        return false;
+                    }
                 }else{
                     return false;
+                }              
+            }else{
+                $realpath = $realpath . '/' .  $currentMonth;
+                if(!file_exists($realpath) || !is_dir($realpath)){
+                    $args = array('target' => $path, 'name' => $currentMonth, 'reqid' => '' );
+                    $result = $elfinder->exec('mkdir', $args);
+                    if($result && $result["added"]){
+                        $path = $result['added'][0]['hash'];    
+                    }else{
+                        $path = $volume->getHash($path, $currentMonth);
+                        return true;
+                    }
                 }                
+
             }
 
-             
+            $path = $volume->getHash($realpath, '');
 
-
-            
-
-            //$name =  $name . $ext; // With your preferred hashing method
-
-            return true;
+            return false;
     }   
         
 }
